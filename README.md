@@ -94,7 +94,7 @@ public class GetWidgetDataQuery:IAsyncQueryHandler<GetWidgetDataRequest, WidgetM
 {
     public async Task<WidgetModel> Execute(GetWidgetDataRequest message)
     {
-        //query your for your data here
+        //query for your data here
         //do some work
 
         return result;
