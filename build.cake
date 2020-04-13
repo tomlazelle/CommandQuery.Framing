@@ -44,12 +44,12 @@ Task("Pack")
                                     Repository              = new NuGetRepository{Url="https://github.com/tomlazelle/CommandQuery.Framing", Type="git"},
                                     Tags                    = new List<string>{"Command","Query","Segregation","Seperation"},
                                     Files                   = new [] {
-                                                                        new NuSpecContent {Source = "**" ,Target = @"lib\netcoreapp2.1\"},
+                                                                        new NuSpecContent {Source = "**" ,Target = @"lib\netcoreapp3.1\"},
                                                                       },
-                                    BasePath                = "./src/" + client + "/bin/Debug/netcoreapp2.1",
+                                    BasePath                = "./src/" + client + "/bin/Debug/netcoreapp3.1",
                                     OutputDirectory         = "./nuget",
                                     Dependencies            = new []{
-                                        new NuSpecDependency{Id="Microsoft.Extensions.DependencyInjection.Abstractions", Version="2.1.1", TargetFramework=".NETCoreApp2.1"}
+                                        new NuSpecDependency{Id="Microsoft.Extensions.DependencyInjection.Abstractions", Version="3.1.3", TargetFramework=".NETCoreApp3.1"}
                                     }
                                 };
 

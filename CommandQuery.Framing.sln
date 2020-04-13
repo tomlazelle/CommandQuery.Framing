@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandQuery.Framing", "src\CommandQuery.Framing\CommandQuery.Framing.csproj", "{A376C469-E54A-4A63-9F67-830C692E5AE8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandQueryApiSample", "sample\CommandQueryApiSample.csproj", "{F5E04634-ADD0-47DE-A4A1-73B8E06FC5E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandQueryApiSample", "sample\CommandQueryApiSample.csproj", "{B1F29C1A-633F-47C8-8D2A-DA056B8CD838}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{A376C469-E54A-4A63-9F67-830C692E5AE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A376C469-E54A-4A63-9F67-830C692E5AE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A376C469-E54A-4A63-9F67-830C692E5AE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F5E04634-ADD0-47DE-A4A1-73B8E06FC5E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F5E04634-ADD0-47DE-A4A1-73B8E06FC5E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F5E04634-ADD0-47DE-A4A1-73B8E06FC5E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F5E04634-ADD0-47DE-A4A1-73B8E06FC5E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1F29C1A-633F-47C8-8D2A-DA056B8CD838}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1F29C1A-633F-47C8-8D2A-DA056B8CD838}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1F29C1A-633F-47C8-8D2A-DA056B8CD838}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1F29C1A-633F-47C8-8D2A-DA056B8CD838}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
