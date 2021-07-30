@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CommandQuery.Framing
 {
@@ -13,48 +14,28 @@ namespace CommandQuery.Framing
             _serviceProvider = serviceProvider;
         }
 
-        public TResponse Execute<TRequest,TResponse>(TRequest message) where TRequest : ICommandMessage
+
+        public TResponse Handle<TRequest, TResponse>(TRequest message) where TRequest : IRqstMessage
         {
-            var genericType = MakeCustomGenericType(typeof(ICommandHandler<,>), message, typeof(TResponse));
-            var messageHandler = (ICommandHandler<TRequest,TResponse>)_serviceProvider.GetService(genericType);
+            var messageHandler = _serviceProvider.GetService<IHandler<TRequest, TResponse>>();
 
-
-            var result =  messageHandler.Execute(message);
+            var result = messageHandler.Execute(message);
 
             return result;
         }
-        public async Task<TResponse> ExecuteAsync<TRequest, TResponse>(TRequest message) where TRequest : ICommandMessage
-        {
-            var genericType = MakeCustomGenericType(typeof(IAsyncCommandHandler<,>), message, typeof(TResponse));
-            var messageHandler = (IAsyncCommandHandler<TRequest, TResponse>)_serviceProvider.GetService(genericType);
 
+        public async Task<TResponse> HandleAsync<TRequest, TResponse>(TRequest message) where TRequest : IRqstMessage
+        {
+            var messageHandler = _serviceProvider.GetService<IAsyncHandler<TRequest, TResponse>>();
 
             var result = await messageHandler.Execute(message);
 
-
             return result;
         }
 
-        public TResponse Query<TRequest, TResponse>(TRequest message) where TRequest : IQueryMessage
+
+        public Type MakeCustomGenericType(Type handlerType, object impl, Type typeArguement)
         {
-            var genericType = MakeCustomGenericType(typeof(IQueryHandler<,>), message, typeof(TResponse));
-
-            var messageHandler = (IQueryHandler<TRequest, TResponse>)_serviceProvider.GetService(genericType);
-
-            return messageHandler.Execute(message);
-        } 
-        
-
-        public async Task<TResponse> QueryAsync<TRequest, TResponse>(TRequest message) where TRequest : IQueryMessage
-        {
-            var genericType = MakeCustomGenericType(typeof(IAsyncQueryHandler<,>), message, typeof(TResponse));
-
-            var messageHandler = (IAsyncQueryHandler<TRequest, TResponse>)_serviceProvider.GetService(genericType);
-
-            return await messageHandler.Execute(message);
-        }
-
-        public Type MakeCustomGenericType(Type handlerType,object impl,Type typeArguement){
 
             if (typeArguement != null)
             {

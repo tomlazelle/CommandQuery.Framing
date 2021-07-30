@@ -1,8 +1,8 @@
 ﻿
 namespace CommandQuery.Framing
 {
-    public interface ICommandMessage
+    public interface IRqstMessage
     {
-        
+
     }
 }

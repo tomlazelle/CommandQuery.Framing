@@ -1,7 +1,17 @@
-﻿namespace CommandQuery.Framing
+﻿using System;
+using System.Threading.Tasks;
+
+namespace CommandQuery.Framing
 {
     public interface IDomainEvent<T>
     {
-        void Execute(T message);
+        event EventHandler<DomainEventArgs> OnComplete;
+        Task Execute(T message);
+    }
+
+    public class DomainEventArgs:EventArgs
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
     }
 }

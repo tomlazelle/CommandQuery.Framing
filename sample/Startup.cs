@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using CreateWidget = CommandQueryApiSample.Domain.Commands.CreateWidget;
 
 namespace CommandQueryApiSample
 {
@@ -29,7 +30,7 @@ namespace CommandQueryApiSample
         {
             services.AddSingleton<ICommandBroker, CommandBroker>();
             services.AddSingleton<IDomainEventPublisher, DomainEventPublisher>();
-            services.AddTransient<IAsyncCommandHandler<CreateWidget, CommandResponse>, CreateWidgetCommand>();
+            services.AddTransient<IAsyncHandler<Domain.Requests.CreateWidget, CommandResponse>, CreateWidget>();
             services.AddTransient<IAsyncQueryHandler<GetWidget, Widget>, GetWidgetQuery>();
             services.AddTransient<IDomainEvent<WidgetCreated>, WidgetCreatedHandler>();
 
