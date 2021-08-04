@@ -6,6 +6,9 @@ namespace CommandQuery.Framing
 {
     public class DomainEventPublisher : IDomainEventPublisher
     {
+        public event EventHandler MessageSent;
+        public event EventHandler<DomainEventArgs> MessageResult;
+
         private readonly IServiceProvider _serviceProvider;
 
         public DomainEventPublisher(IServiceProvider serviceProvider)
@@ -13,14 +16,21 @@ namespace CommandQuery.Framing
             _serviceProvider = serviceProvider;
         }
 
-        public void Publish<TMessageType>(TMessageType message)
+        public async Task Publish<TMessageType>(TMessageType message)
         {
             var events = _serviceProvider.GetServices<IDomainEvent<TMessageType>>();
 
             foreach (var domainEvent in events)
             {
-                Task.Run(() => domainEvent.Execute(message));
+                domainEvent.OnComplete += DomainEvent_OnComplete;
+                MessageSent?.Invoke(this, new EventArgs());
+                await domainEvent.Execute(message);
             }
+        }
+
+        private void DomainEvent_OnComplete(object sender, DomainEventArgs e)
+        {
+            MessageResult?.Invoke(this, e);
         }
     }
 }

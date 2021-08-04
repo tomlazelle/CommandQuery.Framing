@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using CreateWidget = CommandQueryApiSample.Domain.Commands.CreateWidget;
 
 namespace CommandQueryApiSample
 {
@@ -27,11 +28,10 @@ namespace CommandQueryApiSample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ICommandBroker, CommandBroker>();
-            services.AddSingleton<IDomainEventPublisher, DomainEventPublisher>();
-            services.AddTransient<IAsyncCommandHandler<CreateWidget, CommandResponse>, CreateWidgetCommand>();
-            services.AddTransient<IAsyncQueryHandler<GetWidget, Widget>, GetWidgetQuery>();
-            services.AddTransient<IDomainEvent<WidgetCreated>, WidgetCreatedHandler>();
+
+            services
+                .AddCommandQuery(typeof(Startup).Assembly);
+            
 
             services
                 .AddControllers()   

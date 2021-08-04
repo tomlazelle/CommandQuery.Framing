@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoFixture.AutoNSubstitute" Version="4.15.0" />
+		<PackageReference Include="Fixie" Version="2.2.2" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="5.0.4" />
+		<PackageReference Include="Shouldly" Version="4.0.3" />
+		<DotNetCliToolReference Include="Fixie.Console" Version="2.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\src\CommandQuery.Framing\CommandQuery.Framing.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="DomainTests\" />
+	  <Folder Include="HandlerTests\" />
+	</ItemGroup>
+</Project>

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CommandQuery.Framing;
-using CommandQuery.Framing.Enums;
 using CommandQueryApiSample.Domain.Messages;
 using CommandQueryApiSample.Domain.Models;
 using CommandQueryApiSample.Domain.Requests;
@@ -15,22 +11,22 @@ namespace CommandQueryApiSample.Controllers
     [ApiController]
     public class WidgetController : ControllerBase
     {
-        private readonly ICommandBroker _commandBroker;
+        private readonly IBroker _commandBroker;
 
-        public WidgetController(ICommandBroker commandBroker)
+        public WidgetController(IBroker commandBroker)
         {
             _commandBroker = commandBroker;
         }
 
         [Route("widget")]
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] CreateWidget request)
+        public async Task<IActionResult> Post([FromBody] CreateWidgetMessage request)
         {
-            var response = await _commandBroker.ExecuteAsync<CreateWidget, CommandResponse>(request);
+            var response = await _commandBroker.HandleAsync<CreateWidgetMessage, CommandResponse<string>>(request);
 
-            if (response.Result == CommandResultType.Success)
+            if (response.Success)
             {
-                return Ok(response.Item<string>());
+                return Ok(response.Data);
             }
 
             return BadRequest(response.Message);
@@ -40,7 +36,7 @@ namespace CommandQueryApiSample.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string id)
         {
-            return Ok(await _commandBroker.QueryAsync<GetWidget, Widget>(new GetWidget { Id = id }));
+            return Ok(await _commandBroker.HandleAsync<GetWidget, Widget>(new GetWidget { Id = id }));
         }
     }
 }

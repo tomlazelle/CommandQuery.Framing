@@ -5,14 +5,14 @@ using CommandQueryApiSample.Domain.Models;
 
 namespace CommandQueryApiSample.Domain.Queries
 {
-    public class GetWidgetQuery : IAsyncQueryHandler<GetWidget, Widget>
+    public class GetWidgetQuery : IAsyncHandler<GetWidget, Widget>
     {
         public async Task<Widget> Execute(GetWidget message)
         {
-            return new Widget
+            return await Task.FromResult( new Widget
             {
                 Id = message.Id
-            };
+            });
         }
     }
 }

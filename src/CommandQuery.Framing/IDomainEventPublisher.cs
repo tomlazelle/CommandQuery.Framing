@@ -1,7 +1,12 @@
-﻿namespace CommandQuery.Framing
+﻿using System;
+using System.Threading.Tasks;
+
+namespace CommandQuery.Framing
 {
     public interface IDomainEventPublisher
     {
-        void Publish<TMessageType>(TMessageType message);
+        event EventHandler MessageSent;
+        event EventHandler<DomainEventArgs> MessageResult;
+        Task Publish<TMessageType>(TMessageType message);
     }
 }
