@@ -1,19 +1,31 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CommandQuery.Framing;
+using CommandQueryApiSample.Domain.Messages;
 using CommandQueryApiSample.Domain.Requests;
 
 namespace CommandQueryApiSample.Domain.Commands
 {
-    public class CreateWidget : AsyncHandler<Requests.CreateWidget, CommandResponse>
+    public class CreateWidget : IAsyncHandler<CreateWidgetMessage, CommandResponse<string>>
     {
-        public CreateWidget(IDomainEventPublisher domainEventPublisher) : base(domainEventPublisher)
-        {
-        }
+        private readonly IDomainEventPublisher _publisher;
 
-        public override async Task<CommandResponse> Execute(Requests.CreateWidget message)
+        public CreateWidget(IDomainEventPublisher publisher)
         {
-            return CommandResponse.Okay(Guid.NewGuid().ToString());
+            _publisher = publisher;
+        }
+        public async Task<CommandResponse<string>> Execute(CreateWidgetMessage message)
+        {
+            var response = Guid.NewGuid().ToString();
+
+            _publisher.MessageResult += (sender, eventargs) =>
+                                        {
+                                            response += $" message was sent and processed with Success={eventargs.Success}";
+                                        };
+
+            await _publisher.Publish(new WidgetCreated());
+
+            return Response.Ok(response);
         }
     }
 }

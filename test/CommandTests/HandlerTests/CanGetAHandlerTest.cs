@@ -13,7 +13,7 @@ namespace CommandTests.HandlerTests
             serviceCollection.AddCommandQuery(typeof(CanGetAHandlerTest).Assembly);
             var provider = serviceCollection.BuildServiceProvider();
 
-            var broker = provider.GetService<ICommandBroker>();
+            var broker = provider.GetService<IBroker>();
             var result = await broker.HandleAsync<TestHandlerMessage, CommandResponse<string>>(new TestHandlerMessage());
 
             result.ShouldNotBeNull();

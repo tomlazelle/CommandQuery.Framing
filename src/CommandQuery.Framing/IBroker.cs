@@ -2,7 +2,7 @@
 
 namespace CommandQuery.Framing
 {
-    public interface ICommandBroker
+    public interface IBroker
     {
         Task<TResponse> HandleAsync<TRequest, TResponse>(TRequest message) where TRequest : IRqstMessage;
         TResponse Handle<TRequest, TResponse>(TRequest message) where TRequest : IRqstMessage;

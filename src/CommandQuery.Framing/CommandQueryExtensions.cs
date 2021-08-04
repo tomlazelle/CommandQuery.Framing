@@ -9,7 +9,7 @@ namespace CommandQuery.Framing
         public static IServiceCollection AddCommandQuery(this IServiceCollection serviceCollection, params Assembly[] handlers)
         {
 
-            serviceCollection.AddSingleton<ICommandBroker, CommandBroker>();
+            serviceCollection.AddSingleton<IBroker, Broker>();
             serviceCollection.AddSingleton<IDomainEventPublisher, DomainEventPublisher>();
 
             serviceCollection.ScanAndAddTransientTypes(handlers,

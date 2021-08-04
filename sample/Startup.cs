@@ -28,11 +28,10 @@ namespace CommandQueryApiSample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ICommandBroker, CommandBroker>();
-            services.AddSingleton<IDomainEventPublisher, DomainEventPublisher>();
-            services.AddTransient<IAsyncHandler<Domain.Requests.CreateWidget, CommandResponse>, CreateWidget>();
-            services.AddTransient<IAsyncQueryHandler<GetWidget, Widget>, GetWidgetQuery>();
-            services.AddTransient<IDomainEvent<WidgetCreated>, WidgetCreatedHandler>();
+
+            services
+                .AddCommandQuery(typeof(Startup).Assembly);
+            
 
             services
                 .AddControllers()   
