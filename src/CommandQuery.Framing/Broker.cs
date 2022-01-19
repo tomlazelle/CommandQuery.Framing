@@ -15,7 +15,7 @@ namespace CommandQuery.Framing
         }
 
 
-        public TResponse Handle<TRequest, TResponse>(TRequest message) where TRequest : IRqstMessage
+        public TResponse Handle<TRequest, TResponse>(TRequest message) where TRequest : IMessage
         {
             var messageHandler = _serviceProvider.GetService<IHandler<TRequest, TResponse>>();
 
@@ -24,7 +24,7 @@ namespace CommandQuery.Framing
             return result;
         }
 
-        public async Task<TResponse> HandleAsync<TRequest, TResponse>(TRequest message) where TRequest : IRqstMessage
+        public async Task<TResponse> HandleAsync<TRequest, TResponse>(TRequest message) where TRequest : IMessage
         {
             var messageHandler = _serviceProvider.GetService<IAsyncHandler<TRequest, TResponse>>();
 

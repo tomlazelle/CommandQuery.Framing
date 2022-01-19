@@ -22,7 +22,7 @@ namespace CommandTests.HandlerTests
         }
     }
 
-    public class TestHandlerMessage : IRqstMessage
+    public class TestHandlerMessage : IMessage
     {
 
     }

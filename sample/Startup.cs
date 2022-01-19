@@ -1,18 +1,10 @@
 ﻿using CommandQuery.Framing;
-using CommandQueryApiSample.Domain.Commands;
-using CommandQueryApiSample.Domain.MessageHandlers;
-using CommandQueryApiSample.Domain.Messages;
-using CommandQueryApiSample.Domain.Models;
-using CommandQueryApiSample.Domain.Queries;
-using CommandQueryApiSample.Domain.Requests;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
-using CreateWidget = CommandQueryApiSample.Domain.Commands.CreateWidget;
 
 namespace CommandQueryApiSample
 {

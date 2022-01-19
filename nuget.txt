@@ -1,0 +1,1 @@
+dotnet pack -p:PackageVersion=1.0.5 -o nuget

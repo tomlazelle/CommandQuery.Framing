@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using CommandQuery.Framing;
+﻿using CommandQuery.Framing;
 using CommandQueryApiSample.Domain.Messages;
 
 namespace CommandQueryApiSample.Domain.MessageHandlers

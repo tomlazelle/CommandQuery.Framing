@@ -7,7 +7,7 @@ namespace CommandQuery.Framing
     /// </summary>
     /// <typeparam name="TRequest">The type of the request.</typeparam>
     /// <typeparam name="TResponse">The type of the response.</typeparam>
-    public interface IAsyncHandler<in TRequest, TResponse> where TRequest : IRqstMessage
+    public interface IAsyncHandler<in TRequest, TResponse> where TRequest : IMessage
     {
         Task<TResponse> Execute(TRequest message);
     }
