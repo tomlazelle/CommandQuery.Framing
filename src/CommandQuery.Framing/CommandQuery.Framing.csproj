@@ -3,12 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <PackageId>CommandQuery.Framing</PackageId>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
     <Authors>Thomas LaZelle</Authors>
     <Product>CommandQuery.Framing</Product>
     <Description>Command Query Seperation Framework</Description>
     <PackageProjectUrl>https://github.com/tomlazelle/CommandQuery.Framing</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/tomlazelle/CommandQuery.Framing/blob/master/LICENSE</PackageLicenseUrl>
     <Copyright>2018</Copyright>
     <RepositoryUrl>https://github.com/tomlazelle/CommandQuery.Framing</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -18,15 +17,29 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Title>CommandQuery.Framing</Title>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
   </ItemGroup>
 
   <Target Name="SetNuspecProperties" BeforeTargets="GenerateNuspec">
