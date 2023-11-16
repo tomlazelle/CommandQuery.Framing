@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using CommandQuery.Framing;
+﻿using CommandQuery.Framing;
 using CommandQueryApiSample.Domain.Messages;
 using CommandQueryApiSample.Domain.Models;
 using CommandQueryApiSample.Domain.Requests;

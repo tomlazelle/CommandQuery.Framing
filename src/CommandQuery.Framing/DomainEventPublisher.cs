@@ -23,7 +23,7 @@ namespace CommandQuery.Framing
             foreach (var domainEvent in events)
             {
                 domainEvent.OnComplete += DomainEvent_OnComplete;
-                MessageSent?.Invoke(this, new EventArgs());
+                MessageSent?.Invoke(this, new DomainEventArgs());
                 await domainEvent.Execute(message);
             }
         }
