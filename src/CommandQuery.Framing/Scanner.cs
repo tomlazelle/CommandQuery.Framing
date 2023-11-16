@@ -9,8 +9,8 @@ namespace CommandQuery.Framing
 
     internal class Scanner
     {
-        private List<Assembly> _asm = new List<Assembly>();
-        private List<Type> _doNotInclude = new List<Type>();
+        private readonly List<Assembly> _asm = new List<Assembly>();
+        private readonly List<Type> _doNotInclude = new List<Type>();
 
         public Scanner ScanAssemblyWithType<T>()
         {
