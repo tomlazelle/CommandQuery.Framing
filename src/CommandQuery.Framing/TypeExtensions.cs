@@ -16,22 +16,29 @@ namespace CommandQuery.Framing
         /// <param name="serviceCollection">The service collection.</param>
         /// <param name="assemblies">The assemblies.</param>
         /// <param name="types">The types.</param>
-        internal static IServiceCollection ScanAndAddTransientTypes(this IServiceCollection serviceCollection, Assembly[] assemblies, Type[] types)
+        public static IServiceCollection ScanAndAddTransientTypes(
+            this IServiceCollection serviceCollection,
+            Assembly[] assemblies,
+            Type[] types)
         {
             new AssemblyConventionScanner()
                 .Assemblies(assemblies)
                 .Matches(types)
-                .Do(foundInterface =>
+                .Do(implementationType =>
                 {
-                    var implInterface = foundInterface.GetTypeInfo().ImplementedInterfaces.ToList();
-                    implInterface.Add(foundInterface);
+                    var serviceTypes = implementationType.GetTypeInfo()
+                        .ImplementedInterfaces
+                        .ToList();
 
-                    foreach (var type in implInterface)
+                    // Optionally add the type itself
+                    serviceTypes.Add(implementationType);
+
+                    foreach (var serviceType in serviceTypes.Distinct())
                     {
-                        serviceCollection.AddTransient(type, foundInterface);
+                        serviceCollection.AddTransient(serviceType, implementationType);
                     }
-
-                }).Execute();
+                })
+                .Execute();
 
             return serviceCollection;
         }

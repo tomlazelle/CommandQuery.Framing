@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace CommandQuery.Framing
+namespace CommandQuery.Framing;
+
+public interface IDomainEventPublisher
 {
-    public interface IDomainEventPublisher
-    {
-        event EventHandler MessageSent;
-        event EventHandler<DomainEventArgs> MessageResult;
-        Task Publish<TMessageType>(TMessageType message);
-    }
+    event EventHandler MessageSent;
+    event EventHandler<DomainEventArgs> MessageResult;
+    Task Publish<TMessageType>(TMessageType message, CancellationToken cancellationToken);
 }

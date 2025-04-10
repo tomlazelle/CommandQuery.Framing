@@ -5,7 +5,7 @@ namespace CommandQueryApiSample.Domain.MessageHandlers
 {
     public class WidgetCreatedHandler:IDomainEvent<WidgetCreated>
     {
-        public event EventHandler<DomainEventArgs> OnComplete;
+        public event EventHandler<DomainEventArgs>? OnComplete;
         public async Task Execute(WidgetCreated message)
         {
             OnComplete?.Invoke(this,new DomainEventArgs

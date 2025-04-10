@@ -1,127 +1,112 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace CommandQuery.Framing
+namespace CommandQuery.Framing;
+
+/// <summary>
+///     assembly convention scanner
+/// </summary>
+internal class AssemblyConventionScanner
 {
-    /// <summary>
-    /// assembly convention scanner
-    /// </summary>
-    internal class AssemblyConventionScanner
+    private static readonly Lazy<AssemblyConventionScanner> _instance =
+        new(() => new AssemblyConventionScanner());
+
+    private Assembly[] _assemblies;
+    private Type[] _targetTypes;
+    private Action<Type> _typeAction;
+
+    public static AssemblyConventionScanner Instance => _instance.Value;
+
+    public AssemblyConventionScanner Assemblies(params Assembly[] assemblies)
     {
-        private Assembly[] _assemblies;
+        _assemblies = assemblies ?? throw new ArgumentNullException(nameof(assemblies));
+        return this;
+    }
 
+    public AssemblyConventionScanner Matches(params Type[] types)
+    {
+        _targetTypes = types;
+        return this;
+    }
 
-        private static Lazy<AssemblyConventionScanner> _instance = new Lazy<AssemblyConventionScanner>(() => new AssemblyConventionScanner());
-        private Type[] _types;
-        private Action<Type> _action;
+    public AssemblyConventionScanner Do(Action<Type> action)
+    {
+        _typeAction = action ?? throw new ArgumentNullException(nameof(action));
+        return this;
+    }
 
-
-        /// <summary>
-        /// Assemblieses the specified assemblies.
-        /// </summary>
-        /// <param name="assemblies">The assemblies.</param>
-        /// <returns></returns>
-        public AssemblyConventionScanner Assemblies(Assembly[] assemblies)
+    public void Execute()
+    {
+        if (_assemblies == null || _typeAction == null)
         {
-            _assemblies = assemblies;
-
-            return this;
+            throw new InvalidOperationException("Assemblies and action must be set before execution.");
         }
 
-        /// <summary>
-        /// Matcheses the specified types.
-        /// </summary>
-        /// <param name="types">The types.</param>
-        /// <returns></returns>
-        public AssemblyConventionScanner Matches(Type[] types)
+        foreach (var assembly in _assemblies)
         {
-            _types = types;
-            return this;
-        }
+            var candidates = assembly.GetTypes().Where(t =>
+                !t.GetTypeInfo().IsAbstract &&
+                !_IsSystemOrMicrosoftNamespace(t) &&
+                (_targetTypes == null || _targetTypes.Any(target => IsAssignableTo(t, target)))
+            );
 
-        /// <summary>
-        /// Does the specified action.
-        /// </summary>
-        /// <param name="action">The action.</param>
-        /// <returns></returns>
-        public AssemblyConventionScanner Do(Action<Type> action)
-        {
-            _action = action;
-
-            return this;
-        }
-
-
-        /// <summary>
-        /// Executes this instance.
-        /// </summary>
-        public void Execute()
-        {
-            foreach (var assembly in _assemblies)
+            foreach (var type in candidates)
             {
-
-
-                var foundTypes = new List<Type>();
-
-
-                if (_types != null)
-                {
-                    foreach (var type in _types)
-                    {
-
-                        foundTypes.AddRange(assembly.GetTypes().Where(x =>
-                            !IntrospectionExtensions.GetTypeInfo(x).IsAbstract
-                            && CanBeCastTo(x, type)));
-
-
-                    }
-
-                }
-                else //scan for all types
-                {
-                    var badNames = new[] { "System", "Microsoft" };
-
-                    foundTypes.AddRange(assembly.GetTypes().Where(x => !x.GetTypeInfo().IsAbstract && !x.GetTypeInfo().IsInterface && !badNames.Any(b => x.Name.StartsWith(b))));
-                }
-
-                foreach (var foundType in foundTypes)
-                {
-                    _action.Invoke(foundType);
-                }
+                _typeAction(type);
             }
         }
 
-        private static bool CanBeCastTo(Type type, Type destinationType)
+        // Optional: Reset internal state after execution
+        _assemblies = null;
+        _targetTypes = null;
+        _typeAction = null;
+    }
+
+    private static bool IsAssignableTo(Type type, Type target)
+    {
+        if (type == null || target == null)
         {
-            if (type == (Type)null)
-                return false;
-            if (type == destinationType)
-                return true;
+            return false;
+        }
 
-            if (destinationType.GetTypeInfo().IsGenericType && !destinationType.GenericTypeArguments.Any())
+        var typeInfo = type.GetTypeInfo();
+        var targetInfo = target.GetTypeInfo();
+
+        // Direct assignment check
+        if (targetInfo.IsAssignableFrom(typeInfo))
+        {
+            return true;
+        }
+
+        // Open generic check for interfaces and base types
+        if (targetInfo.IsGenericTypeDefinition)
+        {
+            // Check all base types
+            while (typeInfo != null && typeInfo.AsType() != typeof(object))
             {
-
-                if (destinationType.GetTypeInfo().IsInterface && !type.GetTypeInfo().IsInterface)
+                if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == target)
                 {
-                    return type.GetInterfaces().Any(x => x.GetTypeInfo().IsGenericType && x.GetGenericTypeDefinition() == destinationType);
+                    return true;
                 }
+
+                typeInfo = typeInfo.BaseType?.GetTypeInfo();
             }
 
-            var t1 = destinationType.IsAssignableFrom(type);
-            var t2 = type.GetInterfaces().Any(x => x.IsAssignableFrom(destinationType));
+            // Check all interfaces
+            return type.GetInterfaces().Any(i =>
+                i.IsGenericType &&
+                i.GetGenericTypeDefinition() == target);
+        }
 
-            return t1 & t2;
-        }
-        /// <summary>
-        /// Finalizes an instance of the <see cref="AssemblyConventionScanner"/> class.
-        /// </summary>
-        ~AssemblyConventionScanner()
-        {
-            _assemblies = null;
-            _action = null;
-            _types = null;
-        }
+        return false;
+    }
+
+    private static bool _IsSystemOrMicrosoftNamespace(Type t)
+    {
+        var ns = t.Namespace;
+        return ns != null &&
+               (ns.StartsWith("System", StringComparison.Ordinal) ||
+                ns.StartsWith("Microsoft", StringComparison.Ordinal));
     }
 }

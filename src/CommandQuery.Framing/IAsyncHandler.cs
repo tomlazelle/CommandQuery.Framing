@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace CommandQuery.Framing
 {
@@ -9,6 +10,6 @@ namespace CommandQuery.Framing
     /// <typeparam name="TResponse">The type of the response.</typeparam>
     public interface IAsyncHandler<in TRequest, TResponse> where TRequest : IMessage
     {
-        Task<TResponse> Execute(TRequest message);
+        Task<TResponse> Execute(TRequest message, CancellationToken cancellationToken);
     }
 }

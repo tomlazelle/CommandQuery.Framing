@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30002.166
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{600030C0-5919-465B-9E4A-466B3B743B7C}"
 EndProject
@@ -11,9 +11,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9101ED47-2F6
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandQuery.Framing", "src\CommandQuery.Framing\CommandQuery.Framing.csproj", "{AF56731C-B528-42CE-9198-060D8211E2CB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{52af3d5a-9f24-4d37-8011-01c2e5c97ab3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{52AF3D5A-9F24-4D37-8011-01C2E5C97AB3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandQueryApiSample", "sample\CommandQueryApiSample.csproj", "{4C8C0B73-40DB-46F6-8BDB-16CCC579052F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,12 +42,12 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {6823F308-E24E-4BE0-9FF1-31DA8CEC4FA6}
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{ECBC580A-C9B6-49D2-BA67-7D83E2D45D72} = {600030C0-5919-465B-9E4A-466B3B743B7C}
 		{AF56731C-B528-42CE-9198-060D8211E2CB} = {9101ED47-2F64-4668-ABE0-6920CA20A885}
-		{4C8C0B73-40DB-46F6-8BDB-16CCC579052F} = {52af3d5a-9f24-4d37-8011-01c2e5c97ab3}
+		{4C8C0B73-40DB-46F6-8BDB-16CCC579052F} = {52AF3D5A-9F24-4D37-8011-01C2E5C97AB3}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6823F308-E24E-4BE0-9FF1-31DA8CEC4FA6}
 	EndGlobalSection
 EndGlobal

@@ -21,7 +21,11 @@ namespace CommandQueryApiSample.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CreateWidgetMessage request)
         {
-            var response = await _commandBroker.HandleAsync<CreateWidgetMessage, CommandResponse<string>>(request);
+
+            // create new cancellation token
+            var cancellationToken = new CancellationTokenSource().Token;
+
+            var response = await _commandBroker.HandleAsync<CreateWidgetMessage, CommandResponse<string>>(request, cancellationToken);
 
             if (response.Success)
             {
@@ -35,7 +39,9 @@ namespace CommandQueryApiSample.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string id)
         {
-            return Ok(await _commandBroker.HandleAsync<GetWidget, Widget>(new GetWidget { Id = id }));
+            // create new cancellation token
+            var cancellationToken = new CancellationTokenSource().Token;
+            return Ok(await _commandBroker.HandleAsync<GetWidget, Widget>(new GetWidget { Id = id }, cancellationToken));
         }
     }
 }
