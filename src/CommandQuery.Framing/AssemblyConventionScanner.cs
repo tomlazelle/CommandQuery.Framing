@@ -1,22 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+
 
 namespace CommandQuery.Framing;
 
 /// <summary>
 ///     assembly convention scanner
 /// </summary>
+
 internal class AssemblyConventionScanner
 {
-    private static readonly Lazy<AssemblyConventionScanner> _instance =
-        new(() => new AssemblyConventionScanner());
-
     private Assembly[] _assemblies;
-    private Type[] _targetTypes;
-    private Action<Type> _typeAction;
+    private Type[] _types;
+    private Action<Type> _action;
+    private readonly ILogger<AssemblyConventionScanner> _logger;
 
-    public static AssemblyConventionScanner Instance => _instance.Value;
+    public AssemblyConventionScanner(ILogger<AssemblyConventionScanner> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     public AssemblyConventionScanner Assemblies(params Assembly[] assemblies)
     {
@@ -26,87 +31,102 @@ internal class AssemblyConventionScanner
 
     public AssemblyConventionScanner Matches(params Type[] types)
     {
-        _targetTypes = types;
+        _types = types;
         return this;
     }
 
     public AssemblyConventionScanner Do(Action<Type> action)
     {
-        _typeAction = action ?? throw new ArgumentNullException(nameof(action));
+        _action = action ?? throw new ArgumentNullException(nameof(action));
         return this;
     }
 
     public void Execute()
     {
-        if (_assemblies == null || _typeAction == null)
-        {
-            throw new InvalidOperationException("Assemblies and action must be set before execution.");
-        }
-
         foreach (var assembly in _assemblies)
         {
-            var candidates = assembly.GetTypes().Where(t =>
-                !t.GetTypeInfo().IsAbstract &&
-                !_IsSystemOrMicrosoftNamespace(t) &&
-                (_targetTypes == null || _targetTypes.Any(target => IsAssignableTo(t, target)))
-            );
+            Type[] assemblyTypes;
 
-            foreach (var type in candidates)
+            try
             {
-                _typeAction(type);
+                assemblyTypes = assembly.GetTypes();
             }
-        }
-
-        // Optional: Reset internal state after execution
-        _assemblies = null;
-        _targetTypes = null;
-        _typeAction = null;
-    }
-
-    private static bool IsAssignableTo(Type type, Type target)
-    {
-        if (type == null || target == null)
-        {
-            return false;
-        }
-
-        var typeInfo = type.GetTypeInfo();
-        var targetInfo = target.GetTypeInfo();
-
-        // Direct assignment check
-        if (targetInfo.IsAssignableFrom(typeInfo))
-        {
-            return true;
-        }
-
-        // Open generic check for interfaces and base types
-        if (targetInfo.IsGenericTypeDefinition)
-        {
-            // Check all base types
-            while (typeInfo != null && typeInfo.AsType() != typeof(object))
+            catch (ReflectionTypeLoadException ex)
             {
-                if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == target)
+                assemblyTypes = ex.Types.Where(t => t != null).ToArray();
+
+                _logger.LogWarning("ReflectionTypeLoadException occurred for assembly {AssemblyName}. Partial types loaded.",
+                    assembly.FullName);
+
+                foreach (var loaderException in ex.LoaderExceptions)
                 {
-                    return true;
+                    _logger.LogWarning(loaderException, "Loader exception while scanning assembly {AssemblyName}", assembly.FullName);
                 }
-
-                typeInfo = typeInfo.BaseType?.GetTypeInfo();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error occurred while loading types from assembly {AssemblyName}", assembly.FullName);
+                continue;
             }
 
-            // Check all interfaces
-            return type.GetInterfaces().Any(i =>
-                i.IsGenericType &&
-                i.GetGenericTypeDefinition() == target);
-        }
+            var foundTypes = new List<Type>();
 
-        return false;
+            if (_types != null)
+            {
+                foreach (var targetType in _types)
+                {
+                    foundTypes.AddRange(assemblyTypes.Where(x =>
+                        !x.GetTypeInfo().IsAbstract &&
+                        CanBeCastTo(x, targetType)));
+                }
+            }
+            else
+            {
+                var badPrefixes = new[] { "System", "Microsoft" };
+
+                foundTypes.AddRange(assemblyTypes.Where(x =>
+                    !x.GetTypeInfo().IsAbstract &&
+                    !x.GetTypeInfo().IsInterface &&
+                    !string.IsNullOrWhiteSpace(x.Namespace) &&
+                    !badPrefixes.Any(b => x.Namespace.StartsWith(b))));
+            }
+
+            foreach (var foundType in foundTypes.Distinct())
+            {
+                try
+                {
+                    _action?.Invoke(foundType);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error invoking action for type {TypeName}", foundType.FullName);
+                }
+            }
+        }
     }
 
-    private static bool _IsSystemOrMicrosoftNamespace(Type t)
+    private static bool CanBeCastTo(Type type, Type destinationType)
     {
-        var ns = t.Namespace;
-        return ns != null &&
-               (ns.StartsWith("System", StringComparison.Ordinal) ||
-                ns.StartsWith("Microsoft", StringComparison.Ordinal));
+        if (type == null || destinationType == null)
+            return false;
+
+        if (type == destinationType)
+            return true;
+
+        var destInfo = destinationType.GetTypeInfo();
+        var typeInfo = type.GetTypeInfo();
+
+        if (destInfo.IsGenericType && !destInfo.GenericTypeArguments.Any())
+        {
+            if (destInfo.IsInterface && !typeInfo.IsInterface)
+            {
+                return type.GetInterfaces().Any(x =>
+                    x.GetTypeInfo().IsGenericType &&
+                    x.GetGenericTypeDefinition() == destinationType);
+            }
+        }
+
+        return destinationType.IsAssignableFrom(type) ||
+               type.GetInterfaces().Any(x => x.IsAssignableFrom(destinationType));
     }
 }

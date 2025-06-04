@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CommandQuery.Framing
 {
@@ -21,7 +22,15 @@ namespace CommandQuery.Framing
             Assembly[] assemblies,
             Type[] types)
         {
-            new AssemblyConventionScanner()
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+                builder.SetMinimumLevel(LogLevel.Information);
+            });
+
+            var logger = loggerFactory.CreateLogger<AssemblyConventionScanner>();
+
+            new AssemblyConventionScanner(logger)
                 .Assemblies(assemblies)
                 .Matches(types)
                 .Do(implementationType =>

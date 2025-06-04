@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CommandQuery.Framing
 {
@@ -27,7 +28,15 @@ namespace CommandQuery.Framing
         }
         public void Scan(IServiceCollection serviceCollection)
         {
-            new AssemblyConventionScanner()
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+                builder.SetMinimumLevel(LogLevel.Information);
+            });
+
+            var logger = loggerFactory.CreateLogger<AssemblyConventionScanner>();
+
+            new AssemblyConventionScanner(logger)
                 .Assemblies(_asm.ToArray())
                 .Do(foundInterface =>
                     {
