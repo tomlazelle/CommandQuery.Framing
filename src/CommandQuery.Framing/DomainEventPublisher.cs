@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,7 +17,7 @@ namespace CommandQuery.Framing
             _serviceProvider = serviceProvider;
         }
 
-        public async Task Publish<TMessageType>(TMessageType message)
+        public async Task Publish<TMessageType>(TMessageType message, CancellationToken cancellationToken = default)
         {
             var events = _serviceProvider.GetServices<IDomainEvent<TMessageType>>();
 

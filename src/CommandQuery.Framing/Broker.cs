@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,11 +25,11 @@ namespace CommandQuery.Framing
             return result;
         }
 
-        public async Task<TResponse> HandleAsync<TRequest, TResponse>(TRequest message) where TRequest : IMessage
+        public async Task<TResponse> HandleAsync<TRequest, TResponse>(TRequest message, CancellationToken cancellationToken = default) where TRequest : IMessage
         {
             var messageHandler = _serviceProvider.GetService<IAsyncHandler<TRequest, TResponse>>();
 
-            var result = await messageHandler.Execute(message);
+            var result = await messageHandler.Execute(message, cancellationToken);
 
             return result;
         }

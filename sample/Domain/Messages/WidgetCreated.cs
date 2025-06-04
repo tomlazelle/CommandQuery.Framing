@@ -2,6 +2,6 @@
 {
     public class WidgetCreated
     {
-        
+        public string Name { get; set; } = string.Empty;
     }
 }

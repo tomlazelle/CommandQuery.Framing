@@ -1,7 +1,6 @@
-﻿namespace CommandQueryApiSample.Domain.Models
+﻿namespace CommandQueryApiSample.Domain.Models;
+
+public class Widget
 {
-    public class Widget
-    {
-        public string Id { get; set; }
-    }
+    public string Id { get; set; } = default!;
 }

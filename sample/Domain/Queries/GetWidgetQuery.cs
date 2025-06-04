@@ -7,7 +7,7 @@ namespace CommandQueryApiSample.Domain.Queries
 {
     public class GetWidgetQuery : IAsyncHandler<GetWidget, Widget>
     {
-        public async Task<Widget> Execute(GetWidget message)
+        public async Task<Widget> Execute(GetWidget message, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult( new Widget
             {

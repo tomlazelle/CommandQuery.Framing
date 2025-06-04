@@ -4,6 +4,6 @@ namespace CommandQueryApiSample.Domain.Messages
 {
     public class GetWidget:IMessage
     {
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
     }
 }

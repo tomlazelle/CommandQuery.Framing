@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using CommandQuery.Framing;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using System.Threading.Tasks;
 
 namespace CommandTests.DomainTests;
 
 public class PublishDomainEventAndContinueTest
 {
+    [Fact]
     public async Task can_continue_after_publishing_domain_event()
     {
         var serviceCollection = new ServiceCollection();
@@ -34,7 +36,7 @@ public class PublishDomainEventAndContinueTest
         };
 
         Console.WriteLine("Publishing");
-        publisher.Publish(new TestDomainEventMessage());
+        await publisher.Publish(new TestDomainEventMessage(), new CancellationToken());
 
         // simulate a delay
         Console.WriteLine("Delaying");
@@ -47,6 +49,4 @@ public class PublishDomainEventAndContinueTest
         sentCnt.ShouldBe(3);
         resultCnt.ShouldBe(3);
     }
-
 }
-
