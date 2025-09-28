@@ -5,7 +5,6 @@ Breaking changes for version 1.0.4 and higher
 #### Commands
 * IBroker
 * Broker
-* IRqstMessage
 * IHandler
 * IAsyncHandler
 
@@ -34,7 +33,7 @@ Call
 ```cs
 public class TestController:Controller
 {
-	private ICommandBroker _broker;
+	private IBroker _broker;
 
 	public TestController(IBroker broker)
 	{
@@ -63,7 +62,7 @@ public class TestController:Controller
 
 ### Creating a Command Handler
 * A Handler is used for gettting, inserting, updating, or deleting data from your database.
-* The DomainEventPublisher is used to publish messages accross your domain.
+* The DomainEventPublisher is used to publish messages across your domain.
 * Ideally commands should be encapsulated and should not call other commands.
 * If you need to query for data then it should be part of the command encapsulating the functionality.
 ```cs
@@ -75,6 +74,7 @@ public class TestController:Controller
         {
             _publisher = publisher;
         }
+
         public async Task<CommandResponse<string>> Execute(CreateWidgetMessage message)
         {
             var response = Guid.NewGuid().ToString();
