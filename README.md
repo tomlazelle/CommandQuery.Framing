@@ -32,9 +32,9 @@ public void ConfigureServices(IServiceCollection services)
 Inject the IBroker into your class
 Call
 ```cs
-public class TestController:Controller
+public class TestController : Controller
 {
-	private ICommandBroker _broker;
+	private readonly IBroker _broker;
 
 	public TestController(IBroker broker)
 	{
@@ -43,27 +43,31 @@ public class TestController:Controller
 
     [Route("/widget")]
     [HttpPost]
-    public asycn Task<IActionResult> CreateWidget(Widget request)
+    public async Task<IActionResult> CreateWidget(
+        Widget request, 
+        CancellationToken cancellationToken)
     {
         // execute command
-        var result = await _broker.HandleAsync<Widget, CommandResponse<string>>(request);
+        var result = await _broker.HandleAsync<Widget, CommandResponse<string>>(
+            request, 
+            cancellationToken);
 
-        //check command result
+        // check command result
         if(result.Success)
         {
             // return success
             return Ok(result.Data);
         }
 
-        // throw on failure
-        throw new BadRequestException(result.Message, result.Exception);
+        // return error
+        return BadRequest(result.Message);
     }
 }
 ```
 
 ### Creating a Command Handler
-* A Handler is used for gettting, inserting, updating, or deleting data from your database.
-* The DomainEventPublisher is used to publish messages accross your domain.
+* A Handler is used for getting, inserting, updating, or deleting data from your database.
+* The DomainEventPublisher is used to publish messages across your domain.
 * Ideally commands should be encapsulated and should not call other commands.
 * If you need to query for data then it should be part of the command encapsulating the functionality.
 ```cs
@@ -75,16 +79,23 @@ public class TestController:Controller
         {
             _publisher = publisher;
         }
-        public async Task<CommandResponse<string>> Execute(CreateWidgetMessage message)
+        
+        public async Task<CommandResponse<string>> Execute(
+            CreateWidgetMessage message, 
+            CancellationToken cancellationToken = default)
         {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(message?.Name))
+                return Response.Failed<string>("Widget name is required");
+
             var response = Guid.NewGuid().ToString();
 
             _publisher.MessageResult += (sender, eventargs) =>
-                                        {
-                                            response += $" message was sent and processed with Success={eventargs.Success}";
-                                        };
+            {
+                response += $" message was sent and processed with Success={eventargs.Success}";
+            };
 
-            await _publisher.Publish(new WidgetCreated());
+            await _publisher.Publish(new WidgetCreated { Name = message.Name }, cancellationToken);
 
             return Response.Ok(response);
         }
@@ -139,10 +150,10 @@ public class TestController:Controller
 
     [Route("/widget")]
     [HttpPost]
-    public asycn Task<IActionResult> CreateWidget(Widget request)
+    public async Task<IActionResult> CreateWidget(Widget request, CancellationToken cancellationToken)
     {
         // execute command
-        var result = await _commandBroker.ExecuteAsync<Widget, CommandResponse>(request);
+        var result = await _commandBroker.ExecuteAsync<Widget, CommandResponse>(request, cancellationToken);
 
         //check command result
         if(result.Result == CommandStatus.Success)

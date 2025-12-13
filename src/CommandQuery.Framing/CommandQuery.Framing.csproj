@@ -35,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="abes.GenericPipeline" Version="1.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" />
@@ -43,7 +44,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
   </ItemGroup>
 
   <Target Name="SetNuspecProperties" BeforeTargets="GenerateNuspec">
