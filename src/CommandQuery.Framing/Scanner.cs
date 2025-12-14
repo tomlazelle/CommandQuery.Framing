@@ -28,7 +28,7 @@ namespace CommandQuery.Framing
         }
         public void Scan(IServiceCollection serviceCollection)
         {
-            var loggerFactory = LoggerFactory.Create(builder =>
+            using var loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
@@ -43,13 +43,17 @@ namespace CommandQuery.Framing
                         var implInterface = foundInterface.GetTypeInfo().ImplementedInterfaces.ToList();
                         implInterface.Add(foundInterface);
 
-                        if (_doNotInclude.Any() && !implInterface.Any(x => _doNotInclude.Any(i => i == x)))
+                        // Skip registration if any implemented interface is in the exclusion list
+                        bool shouldExclude = implInterface.Any(iface => _doNotInclude.Contains(iface));
+                        if (shouldExclude)
                         {
-                            foreach (var type in implInterface)
-                            {
-                                serviceCollection.AddTransient(type, foundInterface);
-                            }
+                            return;
+                        }
 
+                        // Register all interfaces implemented by this type
+                        foreach (var type in implInterface)
+                        {
+                            serviceCollection.AddTransient(type, foundInterface);
                         }
                     })
                 .Execute();
