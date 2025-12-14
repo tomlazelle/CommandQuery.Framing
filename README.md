@@ -1,13 +1,7 @@
 # Command Query Framework
 
-Breaking changes for version 1.0.4 and higher
-### Objects
-#### Commands
-* IBroker
-* Broker
-* IRqstMessage
-* IHandler
-* IAsyncHandler
+**Current Version:** 1.0.11  
+**Target Framework:** .NET 9.0
 
 #### Domain Event
 * IDomainEvent
