@@ -1,189 +1,379 @@
-# Command Query Framework
+# CommandQuery.Framing
 
 **Current Version:** 1.0.11  
 **Target Framework:** .NET 9.0
 
-#### Domain Event
-* IDomainEvent
-* IDomainEventPublisher
+A lightweight, extensible CQRS (Command Query Responsibility Segregation) framework for .NET that simplifies command, query, and domain event handling with built-in pipeline support.
 
-#### Static Response
-* Response
+## Features
+
+✨ **Simple API** - Single `IBroker` interface for executing commands and queries  
+📦 **Auto-Registration** - Automatic handler discovery via assembly scanning  
+🔄 **Domain Events** - Built-in publisher/subscriber pattern with pipeline middleware  
+🎯 **Type-Safe** - Strongly-typed requests and responses  
+⚡ **Async First** - Full async/await support with `CancellationToken`  
+🔌 **Pipeline Middleware** - Add cross-cutting concerns (logging, validation, etc.) to domain events  
+📝 **Well-Documented** - Comprehensive XML documentation for IntelliSense  
+🧪 **Tested** - Includes test suite and working sample application
+
+## Installation
+
+```bash
+dotnet add package CommandQuery.Framing
+```
+
+## Quick Start
 
 ### Setup
-```cs
+
+Register CommandQuery services in your `Startup.cs` or `Program.cs`:
+
+```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-    /// this will add required interface
-    /// this will also search your assemblies for
-    /// types that can be handled
+    // Automatically discovers and registers all handlers in the assembly
+    services.AddCommandQuery(typeof(Startup).Assembly);
+}
+```
+
+### Using the Broker
+
+Inject `IBroker` into your controllers or services to execute commands and queries:
+
+```csharp
+[ApiController]
+public class WidgetController : ControllerBase
+{
+    private readonly IBroker _broker;
+
+    public WidgetController(IBroker broker)
+    {
+        _broker = broker;
+    }
+
+    [HttpPost("widget")]
+    public async Task<IActionResult> CreateWidget(
+        [FromBody] CreateWidgetMessage request, 
+        CancellationToken cancellationToken)
+    {
+        var result = await _broker.HandleAsync<CreateWidgetMessage, CommandResponse<string>>(
+            request, 
+            cancellationToken);
+
+        return result.Success 
+            ? Ok(result.Data) 
+            : BadRequest(result.Message);
+    }
+
+    [HttpGet("widget/{id}")]
+    public async Task<IActionResult> GetWidget(
+        string id, 
+        CancellationToken cancellationToken)
+    {
+        var widget = await _broker.HandleAsync<GetWidget, Widget>(
+            new GetWidget { Id = id }, 
+            cancellationToken);
+
+        return Ok(widget);
+    }
+}
+```
+
+### Creating Handlers
+
+#### Command Handler
+
+Implement `IAsyncHandler<TRequest, TResponse>` for commands that modify state:
+
+```csharp
+public class CreateWidgetHandler : IAsyncHandler<CreateWidgetMessage, CommandResponse<string>>
+{
+    private readonly IDomainEventPublisher _publisher;
+    private readonly IWidgetRepository _repository;
+
+    public CreateWidgetHandler(
+        IDomainEventPublisher publisher,
+        IWidgetRepository repository)
+    {
+        _publisher = publisher;
+        _repository = repository;
+    }
+    
+    public async Task<CommandResponse<string>> Execute(
+        CreateWidgetMessage message, 
+        CancellationToken cancellationToken = default)
+    {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(message?.Name))
+            return Response.Failed<string>("Widget name is required");
+
+        // Create widget
+        var widgetId = Guid.NewGuid().ToString();
+        await _repository.CreateAsync(widgetId, message.Name, cancellationToken);
+
+        // Publish domain event
+        await _publisher.Publish(
+            new WidgetCreated { Id = widgetId, Name = message.Name }, 
+            cancellationToken);
+
+        return Response.Ok(widgetId);
+    }
+}
+```
+
+#### Query Handler
+
+Implement `IAsyncHandler<TRequest, TResponse>` for queries that retrieve data:
+
+```csharp
+public class GetWidgetQuery : IAsyncHandler<GetWidget, Widget>
+{
+    private readonly IWidgetRepository _repository;
+
+    public GetWidgetQuery(IWidgetRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<Widget> Execute(
+        GetWidget message, 
+        CancellationToken cancellationToken = default)
+    {
+        return await _repository.GetByIdAsync(message.Id, cancellationToken);
+    }
+}
+```
+
+#### Synchronous Handlers
+
+For synchronous operations, implement `IHandler<TRequest, TResponse>`:
+
+```csharp
+public class ValidateWidget : IHandler<Widget, bool>
+{
+    public bool Execute(Widget message)
+    {
+        return !string.IsNullOrEmpty(message.Name);
+    }
+}
+```
+
+## Domain Events
+
+Publish domain events to notify other parts of your application:
+
+```csharp
+public class CreateWidgetHandler : IAsyncHandler<CreateWidgetMessage, CommandResponse<string>>
+{
+    private readonly IDomainEventPublisher _publisher;
+
+    public CreateWidgetHandler(IDomainEventPublisher publisher)
+    {
+        _publisher = publisher;
+    }
+
+    public async Task<CommandResponse<string>> Execute(
+        CreateWidgetMessage message,
+        CancellationToken cancellationToken = default)
+    {
+        var widgetId = Guid.NewGuid().ToString();
+
+        // Publish domain event
+        await _publisher.Publish(
+            new WidgetCreated { Id = widgetId, Name = message.Name },
+            cancellationToken);
+
+        return Response.Ok(widgetId);
+    }
+}
+```
+
+### Domain Event Handlers
+
+Implement `IDomainEvent<TMessage>` to handle domain events:
+
+```csharp
+public class WidgetCreatedHandler : IDomainEvent<WidgetCreated>
+{
+    private readonly IEmailService _emailService;
+    public event EventHandler<DomainEventArgs>? OnComplete;
+
+    public WidgetCreatedHandler(IEmailService emailService)
+    {
+        _emailService = emailService;
+    }
+
+    public async Task Execute(WidgetCreated message)
+    {
+        await _emailService.SendNotificationAsync($"Widget {message.Name} created");
+        
+        OnComplete?.Invoke(this, new DomainEventArgs 
+        { 
+            Success = true, 
+            Message = "Notification sent" 
+        });
+    }
+}
+```
+
+## Pipeline Middleware (NEW in 1.0.10)
+
+Add cross-cutting concerns to domain events using middleware pipelines powered by [abes.GenericPipeline](https://github.com/tomlazelle/pipeline).
+
+### Configure Pipeline
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddCommandQuery(typeof(Startup).Assembly);
+    
+    // Register middleware
     services
-        .AddCommandQuery(<Your assemblies here>);
+        .AddDomainEventMiddleware<LoggingMiddleware<WidgetCreated>>()
+        .AddDomainEventMiddleware<ValidationMiddleware<WidgetCreated>>();
+    
+    // Configure pipeline for specific message type
+    services.AddDomainEventPipeline<WidgetCreated>(builder =>
+    {
+        builder.Use<ValidationMiddleware<WidgetCreated>>();
+        builder.Use<LoggingMiddleware<WidgetCreated>>();
+    });
 }
 ```
 
-### Calling a Command or Query
-Inject the IBroker into your class
-Call
-```cs
-public class TestController:Controller
+### Create Middleware
+
+```csharp
+public class LoggingMiddleware<TMessage> : IPipelineMiddleware<DomainEventContext<TMessage>>
 {
-	private ICommandBroker _broker;
+    private readonly ILogger _logger;
 
-	public TestController(IBroker broker)
-	{
-		_broker = broker;
-	}
-
-    [Route("/widget")]
-    [HttpPost]
-    public asycn Task<IActionResult> CreateWidget(Widget request)
+    public LoggingMiddleware(ILogger<LoggingMiddleware<TMessage>> logger)
     {
-        // execute command
-        var result = await _broker.HandleAsync<Widget, CommandResponse<string>>(request);
+        _logger = logger;
+    }
 
-        //check command result
-        if(result.Success)
-        {
-            // return success
-            return Ok(result.Data);
-        }
-
-        // throw on failure
-        throw new BadRequestException(result.Message, result.Exception);
+    public async ValueTask InvokeAsync(
+        DomainEventContext<TMessage> context, 
+        PipelineDelegate<DomainEventContext<TMessage>> next)
+    {
+        _logger.LogInformation("Processing: {MessageType}", typeof(TMessage).Name);
+        
+        await next(context); // Execute next middleware or handler
+        
+        _logger.LogInformation("Completed: {MessageType}, Success: {Success}", 
+            typeof(TMessage).Name, 
+            context.Success);
     }
 }
 ```
 
-### Creating a Command Handler
-* A Handler is used for gettting, inserting, updating, or deleting data from your database.
-* The DomainEventPublisher is used to publish messages accross your domain.
-* Ideally commands should be encapsulated and should not call other commands.
-* If you need to query for data then it should be part of the command encapsulating the functionality.
-```cs
-    public class CreateWidget : IAsyncHandler<CreateWidgetMessage, CommandResponse<string>>
-    {
-        private readonly IDomainEventPublisher _publisher;
+**See [PIPELINE_GUIDE.md](PIPELINE_GUIDE.md) for comprehensive pipeline documentation.**
 
-        public CreateWidget(IDomainEventPublisher publisher)
-        {
-            _publisher = publisher;
-        }
-        public async Task<CommandResponse<string>> Execute(CreateWidgetMessage message)
-        {
-            var response = Guid.NewGuid().ToString();
+## Response Helpers
 
-            _publisher.MessageResult += (sender, eventargs) =>
-                                        {
-                                            response += $" message was sent and processed with Success={eventargs.Success}";
-                                        };
+Use the static `Response` class to create command responses:
 
-            await _publisher.Publish(new WidgetCreated());
+```csharp
+// Success with data
+return Response.Ok(widgetId);
 
-            return Response.Ok(response);
-        }
-    }
+// Success without data
+return Response.Ok();
+
+// Failure with single error
+return Response.Failed<string>("Widget not found");
+
+// Failure with multiple errors
+return Response.Failed<string>(new List<string> { "Error 1", "Error 2" });
+
+// Failure with exception
+return Response.Failed<string>(exception);
+return Response.Failed<string>("Custom message", exception);
 ```
 
-## <= 1.0.3
-### Objects
-ICommandHandler
-CommandHandler
-IAsyncCommandHandler
-AsyncCommandHandler
-ICommandBroker
-CommandBroker
-IQueryHandler
-QueryHandler
-IAsyncQueryHandler
-AsyncQueryHandler
-IDomainEventPublisher
-DomainEventPublisher
-ICommandBroker
-CommandBroker
-CommandResponse
-IDomainEvent
+## Core Interfaces
 
-### Basic Setup
-* Register the CommandBroker
-* Register the DomainEventPublisher
-* Define and Register the CommandHandlers
-* Define and Register the QueryHandlers
-```cs
-public void ConfigureServices(IServiceCollection services)
+### IBroker
+```csharp
+public interface IBroker
 {
-    services.AddSingleton<ICommandBroker, CommandBroker>();
-    service.AddTransient<IDomainEventPublisher, DomainEventPublisher>();
-    service.AddTransient<ICommandHandler<CreateMessage,CommandResponse>, CreateNewWidgetCommand>();
-    service.AddTransient<IQueryHandler<GetWidget,Widget>, GetWidgetQuery>();
-}
-```
-### Calling a Command or Query
-Inject the ICommandBroker into your class
-Call
-```cs
-public class TestController:Controller
-{
-	private ICommandBroker _commandBroker;
-
-	public TestController(ICommandBroker commandBroker)
-	{
-		_commandBroker = commandBroker;
-	}
-
-    [Route("/widget")]
-    [HttpPost]
-    public asycn Task<IActionResult> CreateWidget(Widget request)
-    {
-        // execute command
-        var result = await _commandBroker.ExecuteAsync<Widget, CommandResponse>(request);
-
-        //check command result
-        if(result.Result == CommandStatus.Success)
-        {
-            // return success
-            return Ok();
-        }
-
-        // throw on failure
-        throw new BadRequestException(result.Message, result.Exception);
-    }
-}
-```
-### Creating a Command Handler
-Command Handler is used for inserting, updating, or deleting data from your database.
-The DomainEventPublisher is used to publish an outbound message for your domain or the message could be sent to a message queue.
-Ideally commands should be encapsulated and should not call other commands or queries.
-If you need to query for data then it should be part of the command encapsulating the functionality.
-```cs
-public class WidgetCommand : AsyncCommandHandler<CreateNewWidgetMessage,CommandResponse>
-{
-    public WidgetCommand(IDomainEventPublisher) : base(domainEventPublisher)
-
-    public override async Task<CommandResponse> Execute(CreateNewWidgetMessage createNewWidgetMessage)
-    {
-        //do your work here
-
-        //publish your message accross the domain
-        DomainEventPublisher.Publish(new MessageHere());
-
-        return CommandResponse.Okay();
-    }
+    Task<TResponse> HandleAsync<TRequest, TResponse>(
+        TRequest message, 
+        CancellationToken cancellationToken) where TRequest : IMessage;
+    
+    TResponse Handle<TRequest, TResponse>(
+        TRequest message) where TRequest : IMessage;
 }
 ```
 
-### Create a Query Handler
-Query Handler is used for fetching data from your data source and returning a projection.
-
-```cs
-public class GetWidgetDataQuery:IAsyncQueryHandler<GetWidgetDataRequest, WidgetModel>
+### IAsyncHandler
+```csharp
+public interface IAsyncHandler<in TRequest, TResponse> where TRequest : IMessage
 {
-    public async Task<WidgetModel> Execute(GetWidgetDataRequest message)
-    {
-        //query for your data here
-        //do some work
-
-        return result;
-    }
+    Task<TResponse> Execute(TRequest message, CancellationToken cancellationToken);
 }
 ```
+
+### IHandler
+```csharp
+public interface IHandler<in TRequest, out TResponse> where TRequest : IMessage
+{
+    TResponse Execute(TRequest message);
+}
+```
+
+### IDomainEventPublisher
+```csharp
+public interface IDomainEventPublisher
+{
+    event EventHandler MessageSent;
+    event EventHandler<DomainEventArgs> MessageResult;
+    
+    Task Publish<TMessageType>(
+        TMessageType message, 
+        CancellationToken cancellationToken);
+}
+```
+
+## Best Practices
+
+✅ **Commands** - Modify state, return `CommandResponse<T>`  
+✅ **Queries** - Read-only, return domain models  
+✅ **Validation** - Validate in handlers or use pipeline middleware  
+✅ **Error Handling** - Return `Response.Failed()` instead of throwing  
+✅ **CancellationToken** - Always accept and pass cancellation tokens  
+✅ **Domain Events** - Use for cross-cutting concerns and notifications  
+✅ **Pipelines** - Add logging, validation, authorization as middleware  
+
+## Sample Application
+
+See the [sample folder](sample/) for a complete working example demonstrating:
+- Command and query handlers
+- Domain event publishing
+- Pipeline middleware
+- ASP.NET Core integration
+
+## Breaking Changes
+
+### Version 1.0.4+
+- Renamed `ICommandBroker` → `IBroker`
+- Unified command/query interfaces to `IHandler`/`IAsyncHandler`
+- Removed separate command/query base classes
+- Messages must implement `IMessage` marker interface
+
+### Version 1.0.10
+- Added pipeline middleware support via `abes.GenericPipeline`
+- Updated `Microsoft.Extensions.DependencyInjection.Abstractions` to 10.0.1
+- Enhanced error handling with detailed exception messages
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Links
+
+- [NuGet Package](https://www.nuget.org/packages/CommandQuery.Framing)
+- [GitHub Repository](https://github.com/tomlazelle/CommandQuery.Framing)
+- [Pipeline Guide](PIPELINE_GUIDE.md)
+- [Sample Application](sample/)
