@@ -53,25 +53,25 @@ public class WidgetController : ControllerBase
 
     [HttpPost("widget")]
     public async Task<IActionResult> CreateWidget(
-        [FromBody] CreateWidgetMessage request, 
+        [FromBody] CreateWidgetMessage request,
         CancellationToken cancellationToken)
     {
         var result = await _broker.HandleAsync<CreateWidgetMessage, CommandResponse<string>>(
-            request, 
+            request,
             cancellationToken);
 
-        return result.Success 
-            ? Ok(result.Data) 
+        return result.Success
+            ? Ok(result.Data)
             : BadRequest(result.Message);
     }
 
     [HttpGet("widget/{id}")]
     public async Task<IActionResult> GetWidget(
-        string id, 
+        string id,
         CancellationToken cancellationToken)
     {
         var widget = await _broker.HandleAsync<GetWidget, Widget>(
-            new GetWidget { Id = id }, 
+            new GetWidget { Id = id },
             cancellationToken);
 
         return Ok(widget);
@@ -98,9 +98,9 @@ public class CreateWidgetHandler : IAsyncHandler<CreateWidgetMessage, CommandRes
         _publisher = publisher;
         _repository = repository;
     }
-    
+
     public async Task<CommandResponse<string>> Execute(
-        CreateWidgetMessage message, 
+        CreateWidgetMessage message,
         CancellationToken cancellationToken = default)
     {
         // Validate input
@@ -113,7 +113,7 @@ public class CreateWidgetHandler : IAsyncHandler<CreateWidgetMessage, CommandRes
 
         // Publish domain event
         await _publisher.Publish(
-            new WidgetCreated { Id = widgetId, Name = message.Name }, 
+            new WidgetCreated { Id = widgetId, Name = message.Name },
             cancellationToken);
 
         return Response.Ok(widgetId);
@@ -136,7 +136,7 @@ public class GetWidgetQuery : IAsyncHandler<GetWidget, Widget>
     }
 
     public async Task<Widget> Execute(
-        GetWidget message, 
+        GetWidget message,
         CancellationToken cancellationToken = default)
     {
         return await _repository.GetByIdAsync(message.Id, cancellationToken);
@@ -206,11 +206,11 @@ public class WidgetCreatedHandler : IDomainEvent<WidgetCreated>
     public async Task Execute(WidgetCreated message)
     {
         await _emailService.SendNotificationAsync($"Widget {message.Name} created");
-        
-        OnComplete?.Invoke(this, new DomainEventArgs 
-        { 
-            Success = true, 
-            Message = "Notification sent" 
+
+        OnComplete?.Invoke(this, new DomainEventArgs
+        {
+            Success = true,
+            Message = "Notification sent"
         });
     }
 }
@@ -226,12 +226,12 @@ Add cross-cutting concerns to domain events using middleware pipelines powered b
 public void ConfigureServices(IServiceCollection services)
 {
     services.AddCommandQuery(typeof(Startup).Assembly);
-    
+
     // Register middleware
     services
         .AddDomainEventMiddleware<LoggingMiddleware<WidgetCreated>>()
         .AddDomainEventMiddleware<ValidationMiddleware<WidgetCreated>>();
-    
+
     // Configure pipeline for specific message type
     services.AddDomainEventPipeline<WidgetCreated>(builder =>
     {
@@ -254,15 +254,15 @@ public class LoggingMiddleware<TMessage> : IPipelineMiddleware<DomainEventContex
     }
 
     public async ValueTask InvokeAsync(
-        DomainEventContext<TMessage> context, 
+        DomainEventContext<TMessage> context,
         PipelineDelegate<DomainEventContext<TMessage>> next)
     {
         _logger.LogInformation("Processing: {MessageType}", typeof(TMessage).Name);
-        
+
         await next(context); // Execute next middleware or handler
-        
-        _logger.LogInformation("Completed: {MessageType}, Success: {Success}", 
-            typeof(TMessage).Name, 
+
+        _logger.LogInformation("Completed: {MessageType}, Success: {Success}",
+            typeof(TMessage).Name,
             context.Success);
     }
 }
@@ -295,19 +295,21 @@ return Response.Failed<string>("Custom message", exception);
 ## Core Interfaces
 
 ### IBroker
+
 ```csharp
 public interface IBroker
 {
     Task<TResponse> HandleAsync<TRequest, TResponse>(
-        TRequest message, 
+        TRequest message,
         CancellationToken cancellationToken) where TRequest : IMessage;
-    
+
     TResponse Handle<TRequest, TResponse>(
         TRequest message) where TRequest : IMessage;
 }
 ```
 
 ### IAsyncHandler
+
 ```csharp
 public interface IAsyncHandler<in TRequest, TResponse> where TRequest : IMessage
 {
@@ -316,6 +318,7 @@ public interface IAsyncHandler<in TRequest, TResponse> where TRequest : IMessage
 ```
 
 ### IHandler
+
 ```csharp
 public interface IHandler<in TRequest, out TResponse> where TRequest : IMessage
 {
@@ -324,14 +327,15 @@ public interface IHandler<in TRequest, out TResponse> where TRequest : IMessage
 ```
 
 ### IDomainEventPublisher
+
 ```csharp
 public interface IDomainEventPublisher
 {
     event EventHandler MessageSent;
     event EventHandler<DomainEventArgs> MessageResult;
-    
+
     Task Publish<TMessageType>(
-        TMessageType message, 
+        TMessageType message,
         CancellationToken cancellationToken);
 }
 ```
@@ -344,11 +348,12 @@ public interface IDomainEventPublisher
 ✅ **Error Handling** - Return `Response.Failed()` instead of throwing  
 ✅ **CancellationToken** - Always accept and pass cancellation tokens  
 ✅ **Domain Events** - Use for cross-cutting concerns and notifications  
-✅ **Pipelines** - Add logging, validation, authorization as middleware  
+✅ **Pipelines** - Add logging, validation, authorization as middleware
 
 ## Sample Application
 
 See the [sample folder](sample/) for a complete working example demonstrating:
+
 - Command and query handlers
 - Domain event publishing
 - Pipeline middleware
@@ -357,12 +362,14 @@ See the [sample folder](sample/) for a complete working example demonstrating:
 ## Breaking Changes
 
 ### Version 1.0.4+
+
 - Renamed `ICommandBroker` → `IBroker`
 - Unified command/query interfaces to `IHandler`/`IAsyncHandler`
 - Removed separate command/query base classes
 - Messages must implement `IMessage` marker interface
 
 ### Version 1.0.10
+
 - Added pipeline middleware support via `abes.GenericPipeline`
 - Updated `Microsoft.Extensions.DependencyInjection.Abstractions` to 10.0.1
 - Enhanced error handling with detailed exception messages
