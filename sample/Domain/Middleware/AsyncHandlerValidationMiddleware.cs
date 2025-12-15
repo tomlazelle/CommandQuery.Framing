@@ -24,7 +24,7 @@ public class AsyncHandlerValidationMiddleware<TRequest, TResponse> : IPipelineMi
             context.ShouldContinue = false;
             
             // For CommandResponse, create an error response
-            if (typeof(TResponse) == typeof(CommandResponse))
+            if (typeof(TResponse) == typeof(ICommandResponse))
             {
                 context.Response = (TResponse)(object)new CommandResponse 
                 { 

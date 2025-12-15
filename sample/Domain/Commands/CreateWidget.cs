@@ -24,12 +24,8 @@ public class CreateWidget : IAsyncHandler<CreateWidgetMessage, CommandResponse<s
             response += $"Name: {message.Name} message was sent and processed with Success={eventargs.Success}";
         };
 
-        await _publisher.Publish(new WidgetCreated{Name = message.Name}, cancellationToken);
+        await _publisher.Publish(new WidgetCreated { Name = message.Name }, cancellationToken);
 
         return Response.Ok(response);
     }
-}
-
-public class V2
-{
 }

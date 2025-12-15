@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using CommandQuery.Framing;
+﻿using CommandQuery.Framing;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -23,11 +20,17 @@ public class CanGetMessageFromDomainPublisherTest
         var sentCnt = 0;
         var resultCnt = 0;
 
+        if (publisher is null)
+        {
+            throw new Exception("Publisher is null");
+        }
+
         publisher.MessageSent += (sender, args) => sentCnt++;
 
         publisher.MessageResult += (sender, args) => resultCnt++;
 
-        await publisher.Publish(new TestDomainEventMessage(), new CancellationToken());
+        var cancellationToken = CancellationToken.None;
+        await publisher.Publish(new TestDomainEventMessage(), cancellationToken);
 
         sentCnt.ShouldBe(2);
         resultCnt.ShouldBe(2);
@@ -40,11 +43,11 @@ public class TestDomainEventMessage
 
 public class TestDomainEvent : IDomainEvent<TestDomainEventMessage>
 {
-    public event EventHandler<DomainEventArgs> OnComplete;
+    public event EventHandler<DomainEventArgs>? OnComplete;
 
     public async Task Execute(TestDomainEventMessage message)
     {
-        OnComplete(this,
+        OnComplete?.Invoke(this,
             new DomainEventArgs
             {
                 Message = "Completed",
@@ -57,11 +60,11 @@ public class TestDomainEvent : IDomainEvent<TestDomainEventMessage>
 
 public class TestDomainEventTwo : IDomainEvent<TestDomainEventMessage>
 {
-    public event EventHandler<DomainEventArgs> OnComplete;
+    public event EventHandler<DomainEventArgs>? OnComplete;
 
     public async Task Execute(TestDomainEventMessage message)
     {
-        OnComplete(this,
+        OnComplete?.Invoke(this,
             new DomainEventArgs
             {
                 Message = "Completed",
