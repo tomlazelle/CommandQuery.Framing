@@ -1,6 +1,6 @@
 # CommandQuery.Framing
 
-**Current Version:** 1.0.11  
+**Current Version:** 1.0.12  
 **Target Framework:** .NET 9.0
 
 A lightweight, extensible CQRS (Command Query Responsibility Segregation) framework for .NET that simplifies command, query, and domain event handling with built-in pipeline support.
