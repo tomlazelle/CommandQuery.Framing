@@ -216,7 +216,37 @@ public class WidgetCreatedHandler : IDomainEvent<WidgetCreated>
 }
 ```
 
-## Pipeline Middleware (NEW in 1.0.10)
+## Pipeline Middleware (NEW)
+
+Add cross-cutting concerns to both handlers and domain events using middleware pipelines powered by [abes.GenericPipeline](https://github.com/tomlazelle/pipeline).
+
+### Handler Pipelines
+
+Apply middleware before and after command/query handler execution:
+
+```csharp
+// Register middleware for async handlers
+services
+    .AddHandlerMiddleware<CachingMiddleware<GetWidget, Widget>>()
+    .AddHandlerMiddleware<LoggingMiddleware<GetWidget, Widget>>()
+    .AddAsyncHandlerPipeline<GetWidget, Widget>(builder =>
+    {
+        builder.Use<CachingMiddleware<GetWidget, Widget>>();
+        builder.Use<LoggingMiddleware<GetWidget, Widget>>();
+    });
+
+// Register middleware for sync handlers
+services
+    .AddHandlerMiddleware<ValidationMiddleware<CreateWidget, CommandResponse>>()
+    .AddHandlerPipeline<CreateWidget, CommandResponse>(builder =>
+    {
+        builder.Use<ValidationMiddleware<CreateWidget, CommandResponse>>();
+    });
+```
+
+**See [HANDLER_PIPELINE_GUIDE.md](HANDLER_PIPELINE_GUIDE.md) for complete handler pipeline documentation.**
+
+### Domain Event Pipelines
 
 Add cross-cutting concerns to domain events using middleware pipelines powered by [abes.GenericPipeline](https://github.com/tomlazelle/pipeline).
 
@@ -268,7 +298,15 @@ public class LoggingMiddleware<TMessage> : IPipelineMiddleware<DomainEventContex
 }
 ```
 
-**See [PIPELINE_GUIDE.md](PIPELINE_GUIDE.md) for comprehensive pipeline documentation.**
+**See [PIPELINE_GUIDE.md](PIPELINE_GUIDE.md) for comprehensive domain event pipeline documentation.**
+
+## Key Features
+
+- **Separate Sync/Async Pipelines**: Pure synchronous and asynchronous implementations without mixing concerns
+- **Middleware Composition**: Chain multiple middleware in execution order  
+- **Short-Circuit Support**: Stop pipeline execution based on conditions
+- **DI Integration**: Middleware automatically receives scoped dependencies
+- **Ordering Control**: Use `IOrderedMiddleware`, `IRunBefore<T>`, `IRunAfter<T>` for deterministic ordering
 
 ## Response Helpers
 
